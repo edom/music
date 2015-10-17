@@ -10,6 +10,8 @@ import qualified GUI as G
 import qualified Lyrics as L
 import qualified Music as M
 import qualified Numbered as N
+import qualified NumberedDraw as Nd
+import qualified PitchDoremi as Pd
 import qualified Table as T
 
 blocks :: IO ()
@@ -53,22 +55,23 @@ amazingGrace = display "Amazing Grace" D.numberedDrawParm drawing
         drawing :: D.Drawing
         drawing = D.Translate 100 200 $ D.Table table
         table = T.prependColumn colMinHeights [rowMinWidths, upperBeaming, upper, lyrics]
-        upperMusic = [
-                N.MNote (N.MkPitch N.So (-1)) 1
-                , N.MNote (N.MkPitch N.Do 0) 2
-                , N.MNote (N.MkPitch N.Mi 0) (1/2)
-                , N.MNote (N.MkPitch N.Do 0) (1/2)
-                , N.MNote (N.MkPitch N.Mi 0) 1
-                , N.MRest 1
-                , N.MNote (N.MkPitch N.Re 0) 1
-                , N.MNote (N.MkPitch N.Do 0) 2
-                , N.MNote (N.MkPitch N.La (-1)) 1
-                , N.MNote (N.MkPitch N.So (-1)) 2
+        upperMusic = map (\ (d,p,o) -> N.note d p o) [
+                (1, Pd.So, -1)
+                , (2, Pd.Do, 0)
+                , (1/2, Pd.Mi, 0)
+                , (1/2, Pd.Do, 0)
+                , (1, Pd.Mi, 0)
+            ] ++ [N.rest 1]
+            ++ map (\ (d,p,o) -> N.note d p o) [
+                (1, Pd.Re, 0)
+                , (2, Pd.Do, 0)
+                , (1, Pd.La, -1)
+                , (2, Pd.So, -1)
             ]
         colMinHeights = replicate (length upper) (D.VGap 32)
         rowMinWidths = replicate (length upper) (D.HGap 40)
-        upper = N.barElemsRow $ N.translate N.defMusicParam upperMusic
-        upperBeaming = N.beamRow $ N.musicBeaming upperMusic
+        upper = Nd.barElemsRow $ N.translate upperMusic
+        upperBeaming = Nd.beamRow $ N.beaming upperMusic
         lyrics = L.row [
             L.Syllable "A", L.Syllable "ma", L.Dash, L.Syllable "zing", L.Underline
             , L.Syllable "grace!", L.Space, L.Syllable "How", L.Syllable "sweet", L.Underline

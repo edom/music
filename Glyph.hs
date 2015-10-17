@@ -105,3 +105,6 @@ timeSigGlyphs x
             (q, r) = divMod x 10
         in
             timeSigGlyphs q ++ timeSigGlyphs r
+
+bullet :: Char
+bullet = '\x2022'

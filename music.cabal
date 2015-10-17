@@ -26,6 +26,8 @@ library
         Lyrics
         Music
         Numbered
+        NumberedDraw
+        PitchDoremi
         Rect
         Table
     build-depends:

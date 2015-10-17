@@ -20,7 +20,7 @@ data Expansion
     = One -- ^ the duration of one dot
     | Half Expansion -- ^ half the given amount
     | Plus Expansion Expansion -- ^ sum of the given amounts
-    deriving (Show)
+    deriving (Read, Show)
 
 fold
     :: a -- ^ this replaces a 'One'
@@ -48,6 +48,12 @@ expand = f numHalfsAllowed
         f d x | d > 0 = Half $ f (d - 1) (x * 2)
         f _ _ = One
         numHalfsAllowed = 8 :: Int
+
+{- |
+This is the inverse of 'expand' (if the expansion is not truncated).
+-}
+collapse :: Expansion -> NumBeat
+collapse = fold 1 (/ 2) (+)
 
 type NumBeat = Rational
 
