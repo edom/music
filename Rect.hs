@@ -3,7 +3,6 @@
 module Rect
 where
 
-import qualified Data.List as L
 import qualified Data.Monoid as Mo
 
 -- * The Rect a type
