@@ -11,6 +11,7 @@ where
 
 import qualified Data.List as L
 
+import qualified BeatExpansion as B
 import qualified Draw as D
 import qualified Rect as R
 
@@ -71,11 +72,11 @@ type NumBeam = Int
 An inhabitant of @'Rhythmical' t@ is a @t@ that happens with a duration.
 -}
 data Rhythmical a
-    = MkRhythmical Expansion a
+    = MkRhythmical B.Expansion a
     deriving (Show)
 
 rhythmical :: NumBeat -> a -> Rhythmical a
-rhythmical b x = MkRhythmical (expand b) x
+rhythmical b x = MkRhythmical (B.expand b) x
 
 -- * Lyrics
 
@@ -106,13 +107,8 @@ type Music = [VoiceElem]
 musicBeaming :: Music -> [NumBeam]
 musicBeaming = concatMap f
     where
-        f (MNote _ d) = beaming (expand d)
-        f (MRest d) = beaming (expand d)
-
-beaming :: Expansion -> [NumBeam]
-beaming One = [0]
-beaming (Half a) = map (1 +) (beaming a)
-beaming (Plus a b) = beaming a ++ beaming b
+        f (MNote _ d) = B.beaming (B.expand d)
+        f (MRest d) = B.beaming (B.expand d)
 
 {- |
 In order to render a 'Music', you need to get a @['BarElem']@ and a @['NumBeam']@ out of it.
@@ -120,22 +116,16 @@ In order to render a 'Music', you need to get a @['BarElem']@ and a @['NumBeam']
 translate :: MusicParam -> Music -> [BarElem]
 translate param = concatMap f
     where
-        f (MNote p d) = replaceFirstBeat $ g $ expand nb
+        f (MNote p d) = replaceFirstBeat $ B.fold [Beat] id (++) $ B.expand nb
             where
                 nb = d * numBeatPerDur
                 replaceFirstBeat [] = []
                 replaceFirstBeat (x : xs) = h x : xs
                 h Beat = Note p
                 h u = u
-                g One = [Beat]
-                g (Half b) = g b
-                g (Plus a b) = g a ++ g b
-        f (MRest d) = g $ expand nb
+        f (MRest d) = B.fold [Rest] id (++) $ B.expand nb
             where
                 nb = d * numBeatPerDur
-                g One = [Rest]
-                g (Half b) = g b
-                g (Plus a b) = g a ++ g b
         numBeatPerDur = mpNumBeatPerDur param
 
 data VoiceElem
@@ -154,44 +144,6 @@ data MusicParam
 
 defMusicParam :: MusicParam
 defMusicParam = MkMusicParam 1
-
--- * Beat expansion
-
-{- |
-An inhabitant of this type represents the expansion of a duration.
-
-Numbered notation can only represent notes whose duration can be stated in the following /expanded/ form:
-
-@
-n0 \/ 2**0 + n1 \/ 2**1 + n2 \/ 2**2 + ...
-@
-
-where n0, n1, n2, and so on are nonnegative integers.
-
-While users prefer writing (2 + 3\/4), it can only be notated as 1 + 1 + (1 + 1\/2)\/2.
-
-The function 'expand' implements that expansion.
--}
-data Expansion
-    = One -- ^ the duration of one dot
-    | Half Expansion -- ^ half the given amount
-    | Plus Expansion Expansion -- ^ sum of the given amounts
-    deriving (Show)
-
-{- |
-Expand a duration so that it corresponds to its notation.
-
-The denominator of the input duration should be a power of 2;
-otherwise the representation will be truncated.
--}
-expand :: NumBeat -> Expansion
-expand = f numHalfsAllowed
-    where
-        f _ 1 = One
-        f d x | x > 1 = Plus One $ f d (x - 1)
-        f d x | d > 0 = Half $ f (d - 1) (x * 2)
-        f _ _ = One
-        numHalfsAllowed = 8 :: Int
 
 -- * Glyphs
 
