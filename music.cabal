@@ -1,0 +1,34 @@
+name: music
+version: 0.0.0
+synopsis: write numbered musical notation
+description:
+homepage: https://github.com/edom/music
+license: BSD3
+license-file: LICENSE
+author: Erik Dominikus
+maintainer: haskell@edom.web.id
+copyright: (C) 2015 Erik Dominikus
+category: Music
+build-type: Simple
+cabal-version: >=1.10
+
+library
+    ghc-options:
+        -Wall
+    exposed-modules:
+        Examples
+        GUI
+        Accidental
+        Draw
+        DrawCairo
+        Glyph
+        Music
+        Numbered
+        Rect
+        Table
+    build-depends:
+        base >= 4
+        , cairo
+        , gtk3
+    default-language:
+        Haskell98
