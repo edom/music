@@ -7,6 +7,7 @@ import qualified Accidental as A
 import qualified Draw as D
 import qualified DrawCairo as Dc
 import qualified GUI as G
+import qualified Lyrics as L
 import qualified Music as M
 import qualified Numbered as N
 import qualified Table as T
@@ -68,10 +69,10 @@ amazingGrace = display "Amazing Grace" D.numberedDrawParm drawing
         rowMinWidths = replicate (length upper) (D.HGap 40)
         upper = N.barElemsRow $ N.translate N.defMusicParam upperMusic
         upperBeaming = N.beamRow $ N.musicBeaming upperMusic
-        lyrics = N.drawLyrics [
-            N.Syllable "A", N.Syllable "ma", N.Dash, N.Syllable "zing", N.Underline
-            , N.Syllable "grace!", N.Space, N.Syllable "How", N.Syllable "sweet", N.Underline
-            , N.Syllable "the", N.Syllable "sound"
+        lyrics = L.row [
+            L.Syllable "A", L.Syllable "ma", L.Dash, L.Syllable "zing", L.Underline
+            , L.Syllable "grace!", L.Space, L.Syllable "How", L.Syllable "sweet", L.Underline
+            , L.Syllable "the", L.Syllable "sound"
             ]
 
 display :: String -> D.Param -> D.Drawing -> IO ()

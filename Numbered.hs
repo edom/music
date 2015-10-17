@@ -78,28 +78,6 @@ data Rhythmical a
 rhythmical :: NumBeat -> a -> Rhythmical a
 rhythmical b x = MkRhythmical (B.expand b) x
 
--- * Lyrics
-
-type Lyrics = [LyricsElem]
-
-drawLyrics :: Lyrics -> [D.Drawing]
-drawLyrics = map f
-    where
-        f (Syllable s) = D.string s
-        f Space = D.HGap 16
-        f Dash = D.char '-'
-        f Underline = D.HLine 32
-
-data LyricsElem
-    = Syllable String
-    -- | should only be used on a rest
-    | Space
-    -- | connects two adjacent syllables in a word
-    | Dash
-    -- | extends a vowel
-    | Underline
-    deriving (Show)
-
 -- * User mental model
 
 type Music = [VoiceElem]

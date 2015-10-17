@@ -23,6 +23,7 @@ library
         DrawCairo
         GUI
         Glyph
+        Lyrics
         Music
         Numbered
         Rect
