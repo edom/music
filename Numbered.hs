@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveFunctor #-}
+
 {- |
 
 Indonesian numbered musical notation.
@@ -11,7 +13,7 @@ where
 
 import qualified BeatExpansion as B
 import qualified NumberedDraw as Nd
-import qualified PitchDoremi as Pd
+import qualified Pitch as Pd
 
 -- * User model
 
@@ -26,7 +28,7 @@ Then you use "NumberedDraw" to render both of them as two separate rows.
 -}
 type Voice = [VoiceElem]
 
-note :: NumBeat -> Pd.Class -> Pd.Octave -> VoiceElem
+note :: NumBeat -> Pd.Doremi -> Pd.Octave -> VoiceElem
 note numbeat cls oct = rhythmical numbeat $ Note cls oct
 
 rest :: NumBeat -> VoiceElem
@@ -74,8 +76,44 @@ rhythmical :: NumBeat -> a -> Rhythmical a
 rhythmical b x = MkRhythmical (B.expand b) x
 
 data Pitch
-    = Note Pd.Class Pd.Octave
+    = Note Pd.Doremi Pd.Octave
     | Rest
     deriving (Read, Show)
 
+-- * Splitting a voice into bars
+
+data Bar a
+    = MkBar
+    {
+        _content :: [(Duration, a)] -- ^ the content
+        , _slur :: Bool -- ^ whether the bar ends with a slur
+    }
+    deriving (Read, Show, Functor)
+
+splitFirstBar
+    :: NumBeatPerBar -- ^ time signature
+    -> [(Duration, a)] -- ^ the input voice
+    -> (Bar a, [(Duration, a)]) -- ^ (the bar, the rest of the voice that doesn't make it into the bar)
+splitFirstBar numBeatPerBar voice = f [] numBeatPerBar voice
+    where
+        f bar _ [] = (MkBar (reverse bar) False, [])
+        f bar n vs | n <= 0 = (MkBar (reverse bar) False, vs)
+        f bar n (v@(dur,_) : vs) | dur <= n = f (v : bar) (n - dur) vs
+        f bar n ((dur,a) : vs) = (MkBar (reverse ((n,a) : bar)) True, ((dur - n, a) : vs))
+
+{-
+data BarElem pitch
+    = Note Pitch Duration
+    | Rest Duration
+    | Dynamics String
+-}
+
+splitIntoBars :: NumBeatPerBar -> [(Duration, a)] -> [Bar a]
+splitIntoBars _ [] = []
+splitIntoBars n v = firstBar : splitIntoBars n theRest
+    where
+        (firstBar, theRest) = splitFirstBar n v
+
+type NumBeatPerBar = Rational
 type NumBeat = Rational
+type Duration = NumBeat

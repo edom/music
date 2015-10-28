@@ -5,7 +5,7 @@ import qualified Data.List as L
 
 import qualified Draw as D
 import qualified Glyph as G
-import qualified PitchDoremi as Pd
+import qualified Pitch as Pd
 import qualified Rect as R
 
 -- * Setting numbered notation into a table
@@ -27,9 +27,9 @@ barElemsRow = map f
         f Beat = D.char G.bullet
         f Rest = D.char '0'
         f (Note cls oct) = note cls oct
-        note :: Pd.Class -> Pd.Octave -> D.Drawing
+        note :: Pd.Doremi -> Pd.Octave -> D.Drawing
         note cls oct =
-            octaveDots oct $ D.Textual (show $ Pd.number cls)
+            octaveDots oct $ D.Textual (show $ Pd.doremiNumber cls)
             where
                 -- octaveDots n d adds n octave dots to drawing d.
                 octaveDots n d | n >= 0 = upperDots n `D.above` d
@@ -59,7 +59,7 @@ data BarElem
     -- | a one-beat rest
     | Rest
     -- | a one-beat note
-    | Note Pd.Class Pd.Octave
+    | Note Pd.Doremi Pd.Octave
     deriving (Show)
 
 -- | A 'NumBeam' describes the number of beams above a column.

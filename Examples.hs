@@ -11,7 +11,7 @@ import qualified Lyrics as L
 import qualified Music as M
 import qualified Numbered as N
 import qualified NumberedDraw as Nd
-import qualified PitchDoremi as Pd
+import qualified Pitch as P
 import qualified Table as T
 
 blocks :: IO ()
@@ -25,20 +25,20 @@ blocks = display "blocks" D.defDrawParm drawing
                         M.ClefChange M.ClefG
                         , M.KeySignature 7
                         , M.TimeSignature 12345 67890
-                        , M.ENote M.D1 (M.MkPitch M.F (Just A.Sharp) 8)
-                        , M.ENote M.D1 (M.MkPitch M.G (Just A.Flat) 8)
-                        , M.ENote M.D1 (M.MkPitch M.A (Just A.Natural) 8)
-                        , M.ENote M.D1 (M.MkPitch M.B Nothing 8)
-                        , M.ENote M.D_2 (M.MkPitch M.B Nothing 8)
-                        , M.ENote M.D_4 (M.MkPitch M.B Nothing 8)
-                        , M.ENote M.D_4 (M.MkPitch M.B Nothing 9)
-                        , M.ENote M.D1 (M.MkPitch M.C Nothing 10)
-                        , M.ENote M.D_4 (M.MkPitch M.C Nothing 6)
-                        , M.ENote M.D_4 (M.MkPitch M.D Nothing 6)
-                        , M.ENote M.D_4 (M.MkPitch M.E Nothing 6)
-                        , M.ENote M.D_4 (M.MkPitch M.C Nothing 8)
-                        , M.ENote M.D_4 (M.MkPitch M.B Nothing 7)
-                        , M.ENote M.D_4 (M.MkPitch M.D Nothing 8)
+                        , M.ENote M.D1 (P.MkPitch P.F A.sharp 8)
+                        , M.ENote M.D1 (P.MkPitch P.G A.flat 8)
+                        , M.ENote M.D1 (P.MkPitch P.A A.natural 8)
+                        , M.ENote M.D1 (P.MkPitch P.B A.none 8)
+                        , M.ENote M.D_2 (P.MkPitch P.B A.none 8)
+                        , M.ENote M.D_4 (P.MkPitch P.B A.none 8)
+                        , M.ENote M.D_4 (P.MkPitch P.B A.none 9)
+                        , M.ENote M.D1 (P.MkPitch P.C A.none 10)
+                        , M.ENote M.D_4 (P.MkPitch P.C A.none 6)
+                        , M.ENote M.D_4 (P.MkPitch P.D A.none 6)
+                        , M.ENote M.D_4 (P.MkPitch P.E A.none 6)
+                        , M.ENote M.D_4 (P.MkPitch P.C A.none 8)
+                        , M.ENote M.D_4 (P.MkPitch P.B A.none 7)
+                        , M.ENote M.D_4 (P.MkPitch P.D A.none 8)
                         , M.ERest M.D1
                         , M.ERest M.D_2
                         , M.ERest M.D_4
@@ -56,17 +56,17 @@ amazingGrace = display "Amazing Grace" D.numberedDrawParm drawing
         drawing = D.Translate 100 200 $ D.Table table
         table = T.prependColumn colMinHeights [rowMinWidths, upperBeaming, upper, lyrics]
         upperMusic = map (\ (d,p,o) -> N.note d p o) [
-                (1, Pd.So, -1)
-                , (2, Pd.Do, 0)
-                , (1/2, Pd.Mi, 0)
-                , (1/2, Pd.Do, 0)
-                , (1, Pd.Mi, 0)
+                (1, P.So, -1)
+                , (2, P.Do, 0)
+                , (1/2, P.Mi, 0)
+                , (1/2, P.Do, 0)
+                , (1, P.Mi, 0)
             ] ++ [N.rest 1]
             ++ map (\ (d,p,o) -> N.note d p o) [
-                (1, Pd.Re, 0)
-                , (2, Pd.Do, 0)
-                , (1, Pd.La, -1)
-                , (2, Pd.So, -1)
+                (1, P.Re, 0)
+                , (2, P.Do, 0)
+                , (1, P.La, -1)
+                , (2, P.So, -1)
             ]
         colMinHeights = replicate (length upper) (D.VGap 32)
         rowMinWidths = replicate (length upper) (D.HGap 40)

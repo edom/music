@@ -7,31 +7,49 @@ import qualified Data.Monoid as Mo
 import Draw
 import qualified Accidental as A
 import qualified Glyph as Gl
+import qualified Pitch as P
 import qualified Rect as R
 
 -- Music notation editor
 
 {- |
-Undo-redo.
+The user does 'Action's.
+
+An 'Action' can be undone.
+
+An 'Action' transforms a 'Music' into another 'Music'.
+
+A list of 'Action's is the difference between two 'Music'.
+
+A save file contains a list of 'Action' to reconstruct the 'Music' from the empty 'Music'.
+
+'show' and 'read' can be used for saving and loading.
 -}
 data Action
     = Put Event Location
     | Select Span
     deriving (Show, Read, Eq)
--- assume single staff, 5-bar
-
--- apply (x <> inverse x) = id
--- apply (inverse x <> x) = id
-inverse :: Action -> Action
-inverse = undefined
 
 {- |
-Pitch class C octave number 0 is C0 (1 Hz in C256 tuning).
-Twelve-tone equal temperament.
-
-The octave number of middle C is 8.
+The module "Numbered" can transform this 'Music' into a Drawing, which can then be drawn.
 -}
-type OctaveNumber = Int
+data Music
+    = MkMusic
+    deriving (Show, Read, Eq)
+
+-- assume single staff, 5-bar
+
+{- |
+@
+apply (x \<\> inverse x) = id
+apply (inverse x \<\> x) = id
+@
+-}
+apply :: Action -> Music -> Music
+apply = undefined
+
+inverse :: Action -> Action
+inverse = undefined
 
 -- | Negative for flats.
 type SharpCount = Int
@@ -103,10 +121,10 @@ draw1 (MkLevel1Parm) = f
                 Mo.<> spaceRight spaceFromNoteLeft (f xs)
             ENote dur pitch ->
                 let
-                    MkPitch _ mbAcci _ = pitch
-                    halfSpaceDiff = pitchHalfSpace gclefTopmostLine - pitchHalfSpace pitch
+                    P.MkPitch _ mbAcci _ = pitch
+                    halfSpaceDiff = P.diatoneNum gclefTopmostLine - P.diatoneNum pitch
                     down = fromIntegral halfSpaceDiff / 2
-                    drawMbAcci = maybe Mo.mempty (spaceRight accidentalSpace . char . A.glyph)
+                    drawAcci = spaceRight accidentalSpace . char . A.glyph
                     drawHead = char (headGlyph dur)
                     numUpperLedgers =
                         if halfSpaceDiff <= -2
@@ -134,14 +152,14 @@ draw1 (MkLevel1Parm) = f
                             ledgerWidth = 2 * headWidth
                         in
                             Translate (negate $ (ledgerWidth - headWidth) / 2) 0 $ HLine ledgerWidth
-                    drawAcciAndHead = drawMbAcci mbAcci Mo.<> drawHead
+                    drawAcciAndHead = drawAcci mbAcci Mo.<> drawHead
                 in
                     spaceDown down drawAcciAndHead
                     Mo.<> drawUpperLedgers
                     Mo.<> drawLowerLedgers
                     Mo.<> spaceRight spaceFromNoteLeft (f xs)
             _ -> f xs
-        gclefTopmostLine = MkPitch F Nothing 9
+        gclefTopmostLine = P.MkPitch P.F A.none 9
 
 -- | Enhancement of draw1 using automatic layout.
 draw2 :: Level1Parm -> Bar -> Drawing
@@ -162,10 +180,10 @@ draw2 (MkLevel1Parm) = HFit 1360 . L.intersperse (HGap 20) . map f
             Mo.<> drawUpperLedgers
             Mo.<> drawLowerLedgers
             where
-                MkPitch _ mbAcci _ = pitch
-                halfSpaceDiff = pitchHalfSpace gclefTopmostLine - pitchHalfSpace pitch
+                P.MkPitch _ mbAcci _ = pitch
+                halfSpaceDiff = P.diatoneNum gclefTopmostLine - P.diatoneNum pitch
                 down = fromIntegral halfSpaceDiff / 2
-                drawMbAcci = maybe Mo.mempty (spaceRight accidentalSpace . char . A.glyph)
+                drawAcci = spaceRight accidentalSpace . char . A.glyph
                 drawHead = char (headGlyph dur)
                 numUpperLedgers =
                     if halfSpaceDiff <= -2
@@ -193,31 +211,9 @@ draw2 (MkLevel1Parm) = HFit 1360 . L.intersperse (HGap 20) . map f
                         ledgerWidth = 2 * headWidth
                     in
                         Translate (negate $ (ledgerWidth - headWidth) / 2) 0 $ HLine ledgerWidth
-                drawAcciAndHead = drawMbAcci mbAcci Mo.<> drawHead
+                drawAcciAndHead = drawAcci mbAcci Mo.<> drawHead
         f _ = Empty
-        gclefTopmostLine = MkPitch F Nothing 9
-
--- | Twelve-tone system.
-data Pitch
-    = MkPitch PitchClass (Maybe A.Accidental) OctaveNumber
-    deriving (Show, Read, Eq)
-
-pitchHalfSpace :: Pitch -> Int
-pitchHalfSpace (MkPitch pitchClass _ octave) =
-    fromEnum pitchClass + 7 * octave
-
-pitchToNumber :: Pitch -> Int
-pitchToNumber (MkPitch pitchClass maybeAccidental octave) =
-    pitchClassNum pitchClass + maybe 0 A.offset maybeAccidental + 12 * octave
-    where
-        pitchClassNum x = case x of
-            C -> 0
-            D -> 2
-            E -> 4
-            F -> 5
-            G -> 7
-            A -> 9
-            B -> 11
+        gclefTopmostLine = P.MkPitch P.F A.none 9
 
 data Level1Parm
     = MkLevel1Parm
@@ -232,7 +228,7 @@ type Bar = [Event]
 data Event
     = ClefChange DClef
     | ERest Duration
-    | ENote Duration Pitch
+    | ENote Duration (P.Pitch P.Abc)
     | KeySignature SharpCount
     | TimeSignature Int Int
     | Split Event Event -- two voices
@@ -241,9 +237,6 @@ data Event
 -- | The unit is bar/measure.
 data Duration = D4 | D2 | D1 | D_2 | D_4 | D_8 | D_16 | D_32 | D_64
     deriving (Show, Read, Eq)
-
--- | Twelve-tone equal temperament.
-data PitchClass = C | D | E | F | G | A | B deriving (Show, Read, Eq, Enum)
 
 type Size = Double
 type MinSize = Double

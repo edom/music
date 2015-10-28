@@ -27,11 +27,12 @@ library
         Music
         Numbered
         NumberedDraw
-        PitchDoremi
+        Pitch
         Rect
         Table
     build-depends:
         base >= 4
+        , QuickCheck
         , cairo
         , gtk3
     default-language:
