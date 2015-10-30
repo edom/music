@@ -157,8 +157,22 @@ break (MkPitch cls aci oct) = (diatoneNum cls, semitoneNum aci, oct)
 
 -- * QuickCheck properties
 
+{- |
+Run all tests in this module.
+-}
+test :: IO ()
+test =
+    mapM_ Q.quickCheck
+    [
+        break_preserves_semitone_number
+        , pitch_class_space_is_a_subspace_of_pitch_space
+        , relativization_preserves_distance
+        , relativization_preserves_diatone
+    ]
+
 break_preserves_semitone_number :: Q.Property
-break_preserves_semitone_number = Q.property prop
+break_preserves_semitone_number =
+    Q.label "break_preserves_semitone_number" prop
     where
         prop :: Pitch Abc -> Bool
         prop p = semitoneNum p == semitoneNum cls + aco + 12 * oct
@@ -167,24 +181,27 @@ break_preserves_semitone_number = Q.property prop
                 cls = toEnum dia :: Abc
 
 pitch_class_space_is_a_subspace_of_pitch_space :: Q.Property
-pitch_class_space_is_a_subspace_of_pitch_space = Q.property prop
+pitch_class_space_is_a_subspace_of_pitch_space =
+    Q.label "pitch_class_space_is_a_subspace_of_pitch_space" prop
     where
         prop :: Abc -> Bool
         prop c = semitoneNum c == semitoneNum (MkPitch c A.None 0)
 
 relativization_preserves_distance :: Q.Property
-relativization_preserves_distance = Q.property prop
+relativization_preserves_distance =
+    Q.label "relativization_preserves_distance" prop
     where
         prop :: KeySignature -> Pitch Abc -> Pitch Abc -> Q.Property
         prop k p q =
-            Q.counterexample ("failing: " ++ show rp ++ "; " ++ show rq)
+            Q.counterexample ("relativization_preserves_distance: " ++ show rp ++ "; " ++ show rq)
             $ semitoneDiff p q Q.=== semitoneDiff rp rq
             where
                 rp = relativize k p
                 rq = relativize k q
 
 relativization_preserves_diatone :: Q.Property
-relativization_preserves_diatone = Q.property prop
+relativization_preserves_diatone =
+    Q.label "relativization_preserves_diatone" prop
     where
         prop :: KeySignature -> Pitch Abc -> Pitch Abc -> Q.Property
         prop k p q =
