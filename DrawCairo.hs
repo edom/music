@@ -79,7 +79,8 @@ draw parm drawee = do
             Ca.setLineWidth staffThickness
             Ca.relLineTo 0 h
             Ca.stroke
-        f (D.Table rows) = preservingCurrentPoint $ do
+        f (D.Table tab) = preservingCurrentPoint $ do
+            let rows = T.rowsOf tab
             bounds_ <- M.mapM (M.mapM (bounds parm)) rows
             let tableRects = T.rowsOf $ Tl.table $ fmap Tl.rectSize $ T.fromRowList bounds_
             M.zipWithM_ drawRow rows tableRects
