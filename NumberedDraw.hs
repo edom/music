@@ -16,7 +16,7 @@ The output is a row of 'D.Drawing's.
 beamRow :: [NumBeam] -> [D.Drawing]
 beamRow [] = []
 beamRow (0 : ns) = D.Empty : beamRow ns
-beamRow (n : ns) = D.GetCellBounds (\ cell -> D.overlay (L.intersperse (D.VGap 4) (replicate n $ D.HLine $ R.width cell))) : beamRow ns
+beamRow (n : ns) = D.GetCellBounds (\ cell -> D.overlay (L.intersperse (D.Gap 0 4) (replicate n $ D.HLine $ R.width cell))) : beamRow ns
 
 {- |
 The output is a row of 'D.Drawing's.
@@ -37,11 +37,11 @@ barElemsRow = map f
                 upperDots n =
                     if n <= 0
                         then D.Empty
-                        else (D.char G.bullet `D.above` D.VGap dotSpacing) `D.above` upperDots (n - 1)
+                        else (D.char G.bullet `D.above` D.Gap 0 dotSpacing) `D.above` upperDots (n - 1)
                 lowerDots n =
                     if n <= 0
                         then D.Empty
-                        else (D.char G.bullet `D.below` D.VGap dotSpacing) `D.below` lowerDots (n - 1)
+                        else (D.char G.bullet `D.below` D.Gap 0 dotSpacing) `D.below` lowerDots (n - 1)
                 dotSpacing :: D.UserUnit
                 dotSpacing = 4
 

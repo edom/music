@@ -109,7 +109,7 @@ data Drawing
     | VLine UserUnit
     -- | an empty drawing with the given minimum width; 'HFit' changes this gap
     | HGap UserUnit
-    | VGap UserUnit
+    | Gap UserUnit UserUnit
     -- | a drawing that is not drawn, but whose size is computed
     | Hidden Drawing
     -- | a juxtaposition of the given drawings;
@@ -146,7 +146,7 @@ instance Show Drawing where
         HLine w -> "HLine " ++ show w
         VLine w -> "VLine " ++ show w
         HGap w -> "HGap " ++ show w
-        VGap w -> "VGap " ++ show w
+        Gap w h -> "Gap " ++ show w ++ " " ++ show h
         HSeq a b -> "HSeq (" ++ show a ++ ") (" ++ show b ++ ")"
         VSeq a b -> "VSeq (" ++ show a ++ ") (" ++ show b ++ ")"
         HFit a b -> "HFit " ++ show a ++ " " ++ show b

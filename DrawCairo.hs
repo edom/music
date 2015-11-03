@@ -46,7 +46,7 @@ draw parm drawee = do
             Ca.relMoveTo w h
         f (D.Textual string) = preservingCurrentPoint $ Ca.showText string
         f (D.HGap (D.MkUserUnit w)) = Ca.relMoveTo w 0
-        f (D.VGap (D.MkUserUnit h)) = Ca.relMoveTo 0 h
+        f (D.Gap (D.MkUserUnit w) (D.MkUserUnit h)) = Ca.relMoveTo w h
         f (D.HSeq u v) = do
             a <- bounds parm u
             b <- bounds parm v
@@ -116,7 +116,7 @@ bounds parm = f
         f (D.HLine w) = return $ R.xywh 0 0 w 1
         f (D.VLine h) = return $ R.xywh 0 0 1 h
         f (D.HGap w) = return $ R.xywh 0 0 w 0
-        f (D.VGap h) = return $ R.xywh 0 0 0 h
+        f (D.Gap w h) = return $ R.xywh 0 0 w h
         f (D.HSeq u v) = do
             a <- f u
             b <- f v

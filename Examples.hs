@@ -69,7 +69,7 @@ amazingGraceDrawing = D.Translate 100 200 $ D.Table table
                 , (1, P.La, -1)
                 , (2, P.So, -1)
             ]
-        colMinHeights = replicate (length upper) (D.VGap 32)
+        colMinHeights = replicate (length upper) (D.Gap 0 32)
         rowMinWidths = replicate (length upper) (D.HGap 40)
         upper = Nd.barElemsRow $ N.translate upperMusic
         upperBeaming = Nd.beamRow $ N.beaming upperMusic
