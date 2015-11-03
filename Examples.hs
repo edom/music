@@ -50,11 +50,12 @@ blocks = display "blocks" D.defDrawParm drawing
                     ]
 
 amazingGrace :: IO ()
-amazingGrace = display "Amazing Grace" D.numberedDrawParm drawing
+amazingGrace = display "Amazing Grace" D.numberedDrawParm amazingGraceDrawing
+
+amazingGraceDrawing :: D.Drawing
+amazingGraceDrawing = D.Translate 100 200 $ D.Table table
     where
-        drawing :: D.Drawing
-        drawing = D.Translate 100 200 $ D.Table table
-        table = T.prependColumn colMinHeights [rowMinWidths, upperBeaming, upper, lyrics]
+        table = T.prependColumn colMinHeights $ T.fromRowList [rowMinWidths, upperBeaming, upper, lyrics]
         upperMusic = map (\ (d,p,o) -> N.note d p o) [
                 (1, P.So, -1)
                 , (2, P.Do, 0)

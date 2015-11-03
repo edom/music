@@ -9,6 +9,7 @@ import qualified Graphics.Rendering.Cairo as Ca
 import qualified Draw as D
 import qualified Rect as R
 import qualified Table as T
+import qualified TableLayout as Tl
 
 {- |
 This maps a 'D.Drawing' to an actual drawing on the screen.
@@ -80,7 +81,7 @@ draw parm drawee = do
             Ca.stroke
         f (D.Table rows) = preservingCurrentPoint $ do
             bounds_ <- M.mapM (M.mapM (bounds parm)) rows
-            let tableRects = T.table $ T.map T.rectSize bounds_
+            let tableRects = T.rowsOf $ Tl.table $ fmap Tl.rectSize $ T.fromRowList bounds_
             M.zipWithM_ drawRow rows tableRects
             where
                 drawRow = M.zipWithM_ drawCol

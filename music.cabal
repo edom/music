@@ -30,6 +30,7 @@ library
         Pitch
         Rect
         Table
+        TableLayout
     build-depends:
         base >= 4
         , QuickCheck
