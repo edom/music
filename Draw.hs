@@ -12,18 +12,21 @@ import qualified Table as T
 
 -- | A textual drawing that consists of one character.
 char :: Char -> Drawing
-char x = Textual [x]
+char x = string [x]
 
 -- | A textual drawing.
 string :: String -> Drawing
-string = Textual
+string = Basic . Textual
+
+line :: UserUnit -> UserUnit -> Drawing
+line x1 y1 = Basic $ Line x1 y1
 
 staff :: Drawing
 staff = genStaff 5
     where
         genStaff :: Int -> Drawing
         genStaff n | n <= 0 = Mo.mempty
-        genStaff n = HLine 1000 Mo.<> spaceDown 1 (genStaff $ n - 1)
+        genStaff n = line 1000 0 Mo.<> spaceDown 1 (genStaff $ n - 1)
 
 -- * Composition
 
@@ -61,14 +64,14 @@ The second drawing should be bigger than the first drawing.
 -}
 above :: Drawing -> MainDrawing -> Drawing
 above u v =
-    GetBounds u $ \ a ->
-    GetBounds v $ \ b ->
+    Lambda $ GetBounds u $ \ a ->
+    Lambda $ GetBounds v $ \ b ->
     Translate 0 (R.y0 b - R.y1 a) u `Overlay` v
 
 below :: Drawing -> MainDrawing -> Drawing
 below u v =
-    GetBounds u $ \ a ->
-    GetBounds v $ \ b ->
+    Lambda $ GetBounds u $ \ a ->
+    Lambda $ GetBounds v $ \ b ->
     Translate 0 (R.y1 b - R.y0 a) u `Overlay` v
 
 {-
@@ -85,14 +88,14 @@ a.y0 + t = b.y1
 type MainDrawing = Drawing
 
 spaceDown :: NumSpace -> Drawing -> Drawing
-spaceDown n d = GetFontSize $ \ f ->
+spaceDown n d = Lambda $ GetFontSize $ \ f ->
     let
         space = f / 4
     in
         Translate 0 (MkUserUnit n * space) d
 
 spaceRight :: NumSpace -> Drawing -> Drawing
-spaceRight n d = GetFontSize $ \ f ->
+spaceRight n d = Lambda $ GetFontSize $ \ f ->
     let
         space = f / 4
     in
@@ -103,11 +106,10 @@ spaceRight n d = GetFontSize $ \ f ->
 data Drawing
     -- | an empty drawing
     = Empty
-    -- | a text
-    | Textual String
-    -- | a horizontal line with the given width; the line extends to the right
-    | HLine UserUnit
-    | VLine UserUnit
+    | Basic BasicDrawing
+    | Lambda LambdaDrawing
+    -- | an empty drawing that prints something to the standard output when rendered
+    | DebugPutStr String
     -- | an empty drawing with the given minimum width; 'HFit' changes this gap
     | HGap UserUnit
     | Gap UserUnit UserUnit
@@ -130,31 +132,25 @@ data Drawing
     -- the arguments are rightward and downward translation amount, respectively;
     -- negative argument means reverse direction
     | Translate UserUnit UserUnit Drawing
+    deriving (Show)
+
+data BasicDrawing
+    -- | a text
+    = Textual String
+    -- | a line from the origin to the given point
+    | Line UserUnit UserUnit
+    deriving (Show)
+
+data LambdaDrawing
     -- | a drawing that depends on the font size used to draw it
-    | GetFontSize (UserUnit -> Drawing)
+    = GetFontSize (UserUnit -> Drawing)
     -- | a drawing that depends on the bounding rectangle of the first drawing; the first drawing is not drawn
     | GetBounds Drawing (R.Rect UserUnit -> Drawing)
     | GetCellBounds (R.Rect UserUnit -> Drawing)
-    -- | an empty drawing that prints something to the standard output when rendered
-    | DebugPutStr String
 
 -- Boilerplate. Nothing interesting here. Move on.
-instance Show Drawing where
+instance Show LambdaDrawing where
     show x = case x of
-        Empty -> "Empty"
-        Textual s -> "Textual " ++ show s
-        Hidden d -> "Hidden " ++ show d
-        HLine w -> "HLine " ++ show w
-        VLine w -> "VLine " ++ show w
-        HGap w -> "HGap " ++ show w
-        Gap w h -> "Gap " ++ show w ++ " " ++ show h
-        HSeq a b -> "HSeq (" ++ show a ++ ") (" ++ show b ++ ")"
-        VSeq a b -> "VSeq (" ++ show a ++ ") (" ++ show b ++ ")"
-        HFit a b -> "HFit " ++ show a ++ " " ++ show b
-        Table a -> "Table " ++ show a
-        Translate a b d -> "Translate " ++ show a ++ " " ++ show b ++ " (" ++ show d ++ ")"
-        Overlay a b -> "Overlay (" ++ show a ++ ") (" ++ show b ++ ")"
-        DebugPutStr s -> "DebugPutStr " ++ show s
         GetFontSize _ -> "GetFontSize <lambda>"
         GetCellBounds _ -> "GetCellBounds <lambda>"
         GetBounds d _ -> "GetBounds (" ++ show d ++ ") <lambda>"

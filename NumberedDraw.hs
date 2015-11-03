@@ -16,7 +16,7 @@ The output is a row of 'D.Drawing's.
 beamRow :: [NumBeam] -> [D.Drawing]
 beamRow [] = []
 beamRow (0 : ns) = D.Empty : beamRow ns
-beamRow (n : ns) = D.GetCellBounds (\ cell -> D.overlay (L.intersperse (D.Gap 0 4) (replicate n $ D.HLine $ R.width cell))) : beamRow ns
+beamRow (n : ns) = D.Lambda (D.GetCellBounds $ \ cell -> D.overlay $ L.intersperse (D.Gap 0 4) $ replicate n $ D.line (R.width cell) 0) : beamRow ns
 
 {- |
 The output is a row of 'D.Drawing's.
@@ -29,7 +29,7 @@ barElemsRow = map f
         f (Note cls oct) = note cls oct
         note :: Pd.Doremi -> Pd.Octave -> D.Drawing
         note cls oct =
-            octaveDots oct $ D.Textual (show $ Pd.doremiNumber cls)
+            octaveDots oct $ D.string $ show $ Pd.doremiNumber cls
             where
                 -- octaveDots n d adds n octave dots to drawing d.
                 octaveDots n d | n >= 0 = upperDots n `D.above` d

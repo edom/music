@@ -31,7 +31,6 @@ draw parm drawee = do
     where
         fontFace = D.drawParmFontFace parm
         fontSize = D.drawParmFontSize parm
-        staffThickness = 1
         preservingCurrentPoint act = do
             (x, y) <- Ca.getCurrentPoint
             M.void act
@@ -44,7 +43,8 @@ draw parm drawee = do
                 D.MkUserUnit w = R.width boundRect
                 D.MkUserUnit h = R.height boundRect
             Ca.relMoveTo w h
-        f (D.Textual string) = preservingCurrentPoint $ Ca.showText string
+        f (D.Basic x) = preservingCurrentPoint $ basicDraw parm x
+        f (D.Lambda x) = preservingCurrentPoint $ lambdaDraw parm x
         f (D.HGap (D.MkUserUnit w)) = Ca.relMoveTo w 0
         f (D.Gap (D.MkUserUnit w) (D.MkUserUnit h)) = Ca.relMoveTo w h
         f (D.HSeq u v) = do
@@ -71,14 +71,6 @@ draw parm drawee = do
                 loop hpos (s : ss) (d : ds) = do
                     f (D.Translate hpos 0 d)
                     loop (hpos + s) ss ds
-        f (D.HLine (D.MkUserUnit w)) = preservingCurrentPoint $ do
-            Ca.setLineWidth staffThickness
-            Ca.relLineTo w 0
-            Ca.stroke
-        f (D.VLine (D.MkUserUnit h)) = preservingCurrentPoint $ do
-            Ca.setLineWidth staffThickness
-            Ca.relLineTo 0 h
-            Ca.stroke
         f (D.Table tab) = preservingCurrentPoint $ do
             let rows = T.rowsOf tab
             bounds_ <- M.mapM (M.mapM (bounds parm)) rows
@@ -93,29 +85,22 @@ draw parm drawee = do
                     where
                         D.MkUserUnit x = R.x0 boundRect
                         D.MkUserUnit y = R.y0 boundRect
-                        g (D.GetCellBounds lam) = f $ lam boundRect
+                        g (D.Lambda (D.GetCellBounds lam)) = f $ lam boundRect
                         g u = f u
         f (D.Translate (D.MkUserUnit x) (D.MkUserUnit y) d) = preservingCurrentPoint $ do
             Ca.relMoveTo x y
             f d
         f (D.Overlay x y) = f x >> f y
         f (D.DebugPutStr x) = Ca.liftIO $ putStr x
-        f (D.GetFontSize c) = f $ c $ D.MkUserUnit fontSize
-        -- deprecated?
-        f (D.GetBounds d c) = bounds parm d >>= f . c
-        -- XXX
-        f x = Ca.liftIO $ putStrLn $ "DrawCairo.draw.f: not implemented: " ++ show x
 
 -- | Compute the size of a drawing.
 bounds :: D.Param -> D.Drawing -> Ca.Render (R.Rect D.UserUnit)
 bounds parm = f
     where
-        fontSize = D.drawParmFontSize parm
         f D.Empty = return R.empty
-        f (D.Textual s) = fmap fromTextExtents $ Ca.textExtents s
+        f (D.Basic x) = basicBounds parm x
+        f (D.Lambda x) = lambdaBounds parm x
         f (D.Hidden d) = f d
-        f (D.HLine w) = return $ R.xywh 0 0 w 1
-        f (D.VLine h) = return $ R.xywh 0 0 1 h
         f (D.HGap w) = return $ R.xywh 0 0 w 0
         f (D.Gap w h) = return $ R.xywh 0 0 w h
         f (D.HSeq u v) = do
@@ -141,18 +126,9 @@ bounds parm = f
             return $ R.xywh 0 0 w h
         f (D.Overlay a b) = M.liftM2 Mo.mappend (f a) (f b)
         f (D.Translate x y d) = fmap (R.translate x y) $ f d
-        -- f (D.GetCellBounds _) = return R.empty -- FIXME
-        f (D.GetBounds d lam) = f d >>= f . lam
-        f (D.GetFontSize lam) = f $ lam $ D.MkUserUnit fontSize
         f x = do
             Ca.liftIO $ putStrLn $ "DrawCairo.bounds.f: not implemented: " ++ show x
             return R.empty
-        fromTextExtents u = R.xywh x y w h
-            where
-                x = D.MkUserUnit $ Ca.textExtentsXbearing u
-                y = D.MkUserUnit $ Ca.textExtentsYbearing u
-                w = D.MkUserUnit $ Ca.textExtentsWidth u
-                h = D.MkUserUnit $ Ca.textExtentsHeight u
 
 -- * Layout and fitting
 
@@ -180,3 +156,48 @@ fit wantedTotalSize elems =
         isResizable _ = False
         minSize (Rigid x) = x
         minSize (Resizable x) = x
+
+-- * Internals
+
+basicDraw :: D.Param -> D.BasicDrawing -> Ca.Render ()
+basicDraw _ = f
+    where
+        f (D.Textual string) = Ca.showText string
+        f (D.Line (D.MkUserUnit x) (D.MkUserUnit y)) = do
+            Ca.setLineWidth staffThickness
+            Ca.relLineTo x y
+            Ca.stroke
+        staffThickness = 1
+
+lambdaDraw :: D.Param -> D.LambdaDrawing -> Ca.Render ()
+lambdaDraw parm = f
+    where
+        f (D.GetFontSize c) = draw parm $ c $ D.MkUserUnit fontSize
+        -- deprecated?
+        f (D.GetBounds d c) = bounds parm d >>= draw parm . c
+        -- XXX
+        f x = Ca.liftIO $ putStrLn $ "DrawCairo.lambdaDraw: not implemented: " ++ show x
+        fontSize = D.drawParmFontSize parm
+
+basicBounds :: D.Param -> D.BasicDrawing -> Ca.Render (R.Rect D.UserUnit)
+basicBounds _ = f
+    where
+        f (D.Textual s) = fmap fromTextExtents $ Ca.textExtents s
+        f (D.Line w h) = return $ R.xywh 0 0 (max 1 w) (max 1 h)
+        fromTextExtents u = R.xywh x y w h
+            where
+                x = D.MkUserUnit $ Ca.textExtentsXbearing u
+                y = D.MkUserUnit $ Ca.textExtentsYbearing u
+                w = D.MkUserUnit $ Ca.textExtentsWidth u
+                h = D.MkUserUnit $ Ca.textExtentsHeight u
+
+lambdaBounds :: D.Param -> D.LambdaDrawing -> Ca.Render (R.Rect D.UserUnit)
+lambdaBounds parm = f
+    where
+        -- f (D.GetCellBounds _) = return R.empty -- FIXME
+        f (D.GetBounds d lam) = bounds parm d >>= bounds parm . lam
+        f (D.GetFontSize lam) = bounds parm $ lam $ D.MkUserUnit fontSize
+        f x = do
+            Ca.liftIO $ putStrLn $ "DrawCairo.lambdaBounds: not implemented: " ++ show x
+            return R.empty
+        fontSize = D.drawParmFontSize parm

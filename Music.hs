@@ -4,8 +4,8 @@ where
 import qualified Data.List as L
 import qualified Data.Monoid as Mo
 
-import Draw
 import qualified Accidental as A
+import qualified Draw as D
 import qualified Glyph as Gl
 import qualified Pitch as P
 import qualified Rect as R
@@ -78,7 +78,7 @@ data Length
 -- LEVEL-1
 
 -- | Draw the contents of a bar.
-draw1 :: Level1Parm -> Bar -> Drawing
+draw1 :: Level1Parm -> Bar -> D.Drawing
 draw1 (MkLevel1Parm) = f
     where
         spaceFromNoteLeft = 5
@@ -96,36 +96,36 @@ draw1 (MkLevel1Parm) = f
         f [] = Mo.mempty
         f (x : xs) = case x of
             -- These rest glyphs have what baselines?
-            ERest D1 -> spaceDown 1 (char Gl.rest1) Mo.<> spaceRight spaceFromNoteLeft (f xs)
-            ERest D_2 -> spaceDown 1.5 (char Gl.rest_2) Mo.<> spaceRight spaceFromNoteLeft (f xs)
-            ERest D_4 -> spaceDown 2 (char Gl.rest_4) Mo.<> spaceRight spaceFromNoteLeft (f xs)
-            ERest D_8 -> spaceDown 2 (char Gl.rest_8) Mo.<> spaceRight spaceFromNoteLeft (f xs)
-            ERest D_16 -> spaceDown 2 (char Gl.rest_16) Mo.<> spaceRight spaceFromNoteLeft (f xs)
-            ERest D_32 -> spaceDown 2 (char Gl.rest_32) Mo.<> spaceRight spaceFromNoteLeft (f xs)
-            ERest D_64 -> spaceDown 2 (char Gl.rest_64) Mo.<> spaceRight spaceFromNoteLeft (f xs)
-            ClefChange ClefF -> spaceDown 1 (char Gl.clefF) Mo.<> spaceRight spaceFromClefLeft (f xs)
+            ERest D1 -> D.spaceDown 1 (D.char Gl.rest1) Mo.<> D.spaceRight spaceFromNoteLeft (f xs)
+            ERest D_2 -> D.spaceDown 1.5 (D.char Gl.rest_2) Mo.<> D.spaceRight spaceFromNoteLeft (f xs)
+            ERest D_4 -> D.spaceDown 2 (D.char Gl.rest_4) Mo.<> D.spaceRight spaceFromNoteLeft (f xs)
+            ERest D_8 -> D.spaceDown 2 (D.char Gl.rest_8) Mo.<> D.spaceRight spaceFromNoteLeft (f xs)
+            ERest D_16 -> D.spaceDown 2 (D.char Gl.rest_16) Mo.<> D.spaceRight spaceFromNoteLeft (f xs)
+            ERest D_32 -> D.spaceDown 2 (D.char Gl.rest_32) Mo.<> D.spaceRight spaceFromNoteLeft (f xs)
+            ERest D_64 -> D.spaceDown 2 (D.char Gl.rest_64) Mo.<> D.spaceRight spaceFromNoteLeft (f xs)
+            ClefChange ClefF -> D.spaceDown 1 (D.char Gl.clefF) Mo.<> D.spaceRight spaceFromClefLeft (f xs)
             ClefChange ClefG ->
                 let
-                    d = char Gl.clefG
+                    d = D.char Gl.clefG
                 in
-                    GetBounds d $ \ boundRect -> spaceDown 3 d Mo.<> Translate (R.width boundRect) 0 (f xs)
+                    D.Lambda $ D.GetBounds d $ \ boundRect -> D.spaceDown 3 d Mo.<> D.Translate (R.width boundRect) 0 (f xs)
             KeySignature nsharps | nsharps > 0 ->
                 foldr
-                    (\ small big -> spaceDown (fromIntegral small / 2) (char Gl.sharp) Mo.<> spaceRight 1 big)
+                    (\ small big -> D.spaceDown (fromIntegral small / 2) (D.char Gl.sharp) Mo.<> D.spaceRight 1 big)
                     Mo.mempty
                     (take nsharps sharpedHalfSpaces)
-                Mo.<> spaceRight spaceFromKeySignatureLeft (f xs)
+                Mo.<> D.spaceRight spaceFromKeySignatureLeft (f xs)
             TimeSignature num den ->
-                spaceDown 1 (Textual $ Gl.timeSigGlyphs num)
-                Mo.<> spaceDown 3 (Textual $ Gl.timeSigGlyphs den)
-                Mo.<> spaceRight spaceFromNoteLeft (f xs)
+                D.spaceDown 1 (D.string $ Gl.timeSigGlyphs num)
+                Mo.<> D.spaceDown 3 (D.string $ Gl.timeSigGlyphs den)
+                Mo.<> D.spaceRight spaceFromNoteLeft (f xs)
             ENote dur pitch ->
                 let
                     P.MkPitch _ mbAcci _ = pitch
                     halfSpaceDiff = P.diatoneNum gclefTopmostLine - P.diatoneNum pitch
                     down = fromIntegral halfSpaceDiff / 2
-                    drawAcci = spaceRight accidentalSpace . char . A.glyph
-                    drawHead = char (headGlyph dur)
+                    drawAcci = D.spaceRight accidentalSpace . D.char . A.glyph
+                    drawHead = D.char (headGlyph dur)
                     numUpperLedgers =
                         if halfSpaceDiff <= -2
                             then negate halfSpaceDiff `div` 2
@@ -135,56 +135,56 @@ draw1 (MkLevel1Parm) = f
                             then (halfSpaceDiff - 8) `div` 2
                             else 0
                     drawUpperLedgers =
-                        GetBounds drawHead $ \ boundRect ->
-                        overlay $ flip map [1 .. numUpperLedgers] $ \ i ->
-                        spaceDown (fromIntegral $ negate i) $
+                        D.Lambda $ D.GetBounds drawHead $ \ boundRect ->
+                        D.overlay $ flip map [1 .. numUpperLedgers] $ \ i ->
+                        D.spaceDown (fromIntegral $ negate i) $
                         let
                             headWidth = R.width boundRect
                             ledgerWidth = 1.5 * headWidth
                         in
-                            Translate (negate $ (ledgerWidth - headWidth) / 2) 0 $ HLine ledgerWidth
+                            D.Translate (negate $ (ledgerWidth - headWidth) / 2) 0 $ D.line ledgerWidth 0
                     drawLowerLedgers =
-                        GetBounds drawHead $ \ boundRect ->
-                        overlay $ flip map [1 .. numLowerLedgers] $ \ i ->
-                        spaceDown (fromIntegral $ 5 + i - 1) $
+                        D.Lambda $ D.GetBounds drawHead $ \ boundRect ->
+                        D.overlay $ flip map [1 .. numLowerLedgers] $ \ i ->
+                        D.spaceDown (fromIntegral $ 5 + i - 1) $
                         let
                             headWidth = R.width boundRect
                             ledgerWidth = 2 * headWidth
                         in
-                            Translate (negate $ (ledgerWidth - headWidth) / 2) 0 $ HLine ledgerWidth
+                            D.Translate (negate $ (ledgerWidth - headWidth) / 2) 0 $ D.line ledgerWidth 0
                     drawAcciAndHead = drawAcci mbAcci Mo.<> drawHead
                 in
-                    spaceDown down drawAcciAndHead
+                    D.spaceDown down drawAcciAndHead
                     Mo.<> drawUpperLedgers
                     Mo.<> drawLowerLedgers
-                    Mo.<> spaceRight spaceFromNoteLeft (f xs)
+                    Mo.<> D.spaceRight spaceFromNoteLeft (f xs)
             _ -> f xs
         gclefTopmostLine = P.MkPitch P.F A.none 9
 
 -- | Enhancement of draw1 using automatic layout.
-draw2 :: Level1Parm -> Bar -> Drawing
+draw2 :: Level1Parm -> Bar -> D.Drawing
 -- draw2 (MkLevel1Parm) = juxtapose . L.intersperse (HGap 20) . map f
-draw2 (MkLevel1Parm) = HFit 1360 . L.intersperse (HGap 20) . map f
+draw2 (MkLevel1Parm) = D.HFit 1360 . L.intersperse (D.HGap 20) . map f
     where
         accidentalSpace = -1.5
         headGlyph x = case x of
             D1 -> Gl.head1
             D_2 -> Gl.head_2
             _ -> Gl.head_4
-        f (ERest D1) = spaceDown 1 (char Gl.rest1)
-        f (ERest D_2) = spaceDown 1.5 (char Gl.rest_2)
-        f (ERest D_4) = spaceDown 2 (char Gl.rest_4)
-        f (ClefChange ClefG) = spaceDown 3 $ char Gl.clefG
+        f (ERest D1) = D.spaceDown 1 (D.char Gl.rest1)
+        f (ERest D_2) = D.spaceDown 1.5 (D.char Gl.rest_2)
+        f (ERest D_4) = D.spaceDown 2 (D.char Gl.rest_4)
+        f (ClefChange ClefG) = D.spaceDown 3 $ D.char Gl.clefG
         f (ENote dur pitch) =
-            spaceDown down drawAcciAndHead
+            D.spaceDown down drawAcciAndHead
             Mo.<> drawUpperLedgers
             Mo.<> drawLowerLedgers
             where
                 P.MkPitch _ mbAcci _ = pitch
                 halfSpaceDiff = P.diatoneNum gclefTopmostLine - P.diatoneNum pitch
                 down = fromIntegral halfSpaceDiff / 2
-                drawAcci = spaceRight accidentalSpace . char . A.glyph
-                drawHead = char (headGlyph dur)
+                drawAcci = D.spaceRight accidentalSpace . D.char . A.glyph
+                drawHead = D.char (headGlyph dur)
                 numUpperLedgers =
                     if halfSpaceDiff <= -2
                         then negate halfSpaceDiff `div` 2
@@ -194,25 +194,25 @@ draw2 (MkLevel1Parm) = HFit 1360 . L.intersperse (HGap 20) . map f
                         then (halfSpaceDiff - 8) `div` 2
                         else 0
                 drawUpperLedgers =
-                    GetBounds drawHead $ \ boundRect ->
-                    overlay $ flip map [1 .. numUpperLedgers] $ \ i ->
-                    spaceDown (fromIntegral $ negate i) $
+                    D.Lambda $ D.GetBounds drawHead $ \ boundRect ->
+                    D.overlay $ flip map [1 .. numUpperLedgers] $ \ i ->
+                    D.spaceDown (fromIntegral $ negate i) $
                     let
                         headWidth = R.width boundRect
                         ledgerWidth = 1.5 * headWidth
                     in
-                        Translate (negate $ (ledgerWidth - headWidth) / 2) 0 $ HLine ledgerWidth
+                        D.Translate (negate $ (ledgerWidth - headWidth) / 2) 0 $ D.line ledgerWidth 0
                 drawLowerLedgers =
-                    GetBounds drawHead $ \ boundRect ->
-                    overlay $ flip map [1 .. numLowerLedgers] $ \ i ->
-                    spaceDown (fromIntegral $ 5 + i - 1) $
+                    D.Lambda $ D.GetBounds drawHead $ \ boundRect ->
+                    D.overlay $ flip map [1 .. numLowerLedgers] $ \ i ->
+                    D.spaceDown (fromIntegral $ 5 + i - 1) $
                     let
                         headWidth = R.width boundRect
                         ledgerWidth = 2 * headWidth
                     in
-                        Translate (negate $ (ledgerWidth - headWidth) / 2) 0 $ HLine ledgerWidth
+                        D.Translate (negate $ (ledgerWidth - headWidth) / 2) 0 $ D.line ledgerWidth 0
                 drawAcciAndHead = drawAcci mbAcci Mo.<> drawHead
-        f _ = Empty
+        f _ = D.Empty
         gclefTopmostLine = P.MkPitch P.F A.none 9
 
 data Level1Parm

@@ -14,7 +14,7 @@ row = map f
         f (Syllable s) = D.string s
         f Space = D.HGap 16
         f Dash = D.char '-'
-        f Underline = D.HLine 32
+        f Underline = D.line 32 0
 
 type Lyrics = [Element]
 
