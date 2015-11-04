@@ -127,7 +127,7 @@ data Drawing
     -- meets the top side of the bounding rectangle of b
     | VSeq MainDrawing Drawing
     -- | table in row-major order; if a row has too few columns, empty columns will be added to the right
-    | Table (T.Table Drawing)
+    | Table (T.Table T.RowMajor Drawing)
     -- | the given drawing, but moved with respect to the parent drawing;
     -- the arguments are rightward and downward translation amount, respectively;
     -- negative argument means reverse direction

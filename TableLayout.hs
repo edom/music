@@ -9,6 +9,8 @@ import qualified Table as T
 
 -- * Placing things into a table
 
+type Table = T.Table T.RowMajor
+
 {- |
 Compute the offsets needed to lay out the drawings into a table.
 
@@ -29,12 +31,12 @@ A table is this set of constraints:
 * all cells in a column have the same width
 
 -}
-table :: (Num a, Ord a) => T.Table (Size a) -> T.Table (R.Rect a)
+table :: (Num a, Ord a) => Table (Size a) -> Table (R.Rect a)
 table inputSizes = T.fromRowList $ zipWith row rowHeights $ L.scanl (+) 0 rowHeights
     where
         row h_ y_ = tail $ L.scanl (\ brPrevRow w -> R.xywh (R.x1 brPrevRow) y_ w h_) (R.xywh 0 y_ 0 h_) columnWidths
         rowHeights = L.map rowHeight $ T.rowsOf inputSizes
-        columnWidths = L.map columnWidth $ T.columnsOf inputSizes
+        columnWidths = L.map columnWidth $ T.colsOf inputSizes
 
 -- * Computing table size
 
@@ -78,7 +80,7 @@ rectSize r = MkSize (R.width r) (R.height r)
 
 -- * Example
 
-example :: T.Table (R.Rect Double)
+example :: Table (R.Rect Double)
 example =
     table $ fmap rectSize $ T.fromRowList [
         [R.xywh 0 0 1 1, R.xywh 0 0 2 4]
