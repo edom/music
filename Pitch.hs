@@ -67,6 +67,9 @@ data Pitch c
     = MkPitch c A.Accidental Octave
     deriving (Show, Read, Eq)
 
+classOf :: Pitch c -> c
+classOf (MkPitch x _ _) = x
+
 -- * Semitone distance
 
 class SemitoneDiff a where

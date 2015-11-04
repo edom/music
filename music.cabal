@@ -27,10 +27,12 @@ library
         Music
         Numbered
         NumberedDraw
+        NumberedTable
         Pitch
         Rect
         Table
         TableLayout
+        Voice
     build-depends:
         base >= 4
         , QuickCheck
