@@ -60,8 +60,6 @@ type NumBeat = Rational
 -- * Beaming
 
 beaming :: Expansion -> [NumBeam]
-beaming One = [0]
-beaming (Half a) = map (1 +) (beaming a)
-beaming (Plus a b) = beaming a ++ beaming b
+beaming = fold [0] (map (1 +)) (++)
 
 type NumBeam = Int
