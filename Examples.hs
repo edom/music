@@ -11,8 +11,12 @@ import qualified Lyrics as L
 import qualified Music as M
 import qualified Numbered as N
 import qualified NumberedDraw as Nd
+import qualified NumberedTable as Nt
 import qualified Pitch as P
 import qualified Table as T
+import qualified Voice as V
+
+import qualified Graphics.UI.Threepenny as Gt
 
 blocks :: IO ()
 blocks = display "blocks" D.defDrawParm drawing
@@ -89,3 +93,25 @@ display title parm drawing = G.run $ do
         >> G.setSizeRequest 640 480 c
     G.showAll w
     G.onDestroy w G.quit
+
+-- * Example
+
+exampleTable :: T.Table T.RowMajor Nt.Cell
+exampleTable = id
+    . T.transform
+    . T.juxtapose
+    . map T.transform
+    . map T.reverseRows
+    . T.equalizeMajor Nt.empty
+    . map T.reverseRows
+    $
+    [
+        Nt.eventTable $ V.note (5/2) P.Do A.none 0
+        , Nt.eventTable $ V.note (5 + 3/4) P.Re A.none 0
+        , Nt.eventTable $ V.note (7 + 15/16) P.Mi A.none 0
+    ]
+
+-- | See 'G.threepennyExample' for the port number.
+threepenny :: IO ()
+threepenny = G.threepennyExample $ \ window -> do
+    Mo.void $ Gt.getBody window Gt.#+ [Nt.renderTable exampleTable]

@@ -4,10 +4,13 @@
 module GUI
 where
 
+import qualified Control.Concurrent as C
 import qualified Control.Monad as M
 
 import qualified Graphics.UI.Gtk as Gu
 import qualified Graphics.Rendering.Cairo as Ca
+
+import qualified Graphics.UI.Threepenny as Gt
 
 -- * Main loop
 
@@ -146,3 +149,12 @@ asGtkWidget (Canvas c) = Just $ MkGtkWidget c
 
 withGtkWidget :: Widget -> a -> (GtkWidget -> a) -> a
 withGtkWidget w x y = maybe x y $ asGtkWidget w
+
+-- * Threepenny example
+
+-- | To see the example, point your browser to localhost port 10000.
+threepennyExample :: (Gt.Window -> Gt.UI ()) -> IO ()
+threepennyExample setup = do
+    t <- C.forkIO $ Gt.startGUI Gt.defaultConfig { Gt.tpPort = Just 10000 } setup
+    M.void getLine
+    C.killThread t

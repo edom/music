@@ -38,5 +38,6 @@ library
         , QuickCheck
         , cairo
         , gtk3
+        , threepenny-gui
     default-language:
         Haskell98
