@@ -1,3 +1,6 @@
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 module Voice
 where
 
@@ -8,25 +11,35 @@ import qualified Pitch as P
 {- |
 A voice is a sequence of duration-pitch pairs.
 
-[@p@] pitch class type.
-Usually 'P.Abc' or 'P.Doremi'.
--}
-type Voice p = [Event p]
+[@d@] duration type
 
-data Event p
-    = MkEvent B.Expansion (Type p)
+[@p@] payload type
+-}
+type Voice d p = [Event d p]
+
+data Event d p
+    = MkEvent d p
     deriving (Read, Show)
 
-note :: Rational -> p -> A.Accidental -> Int -> Event p
-note rhy cls aci oct = MkEvent (B.expand rhy) $ Note (P.MkPitch cls aci oct)
+note :: BeatCount -> p -> A.Accidental -> Int -> Event BeatCount (Type p)
+note rhy cls aci oct = MkEvent rhy $ Note (P.MkPitch cls aci oct)
 
-rhythmOf :: Event p -> B.Expansion
-rhythmOf (MkEvent x _) = x
+-- | Number of beats.
+type BeatCount = Rational
+
+expand :: Event BeatCount p -> Event B.Expansion p
+expand (MkEvent d x) = MkEvent (B.expand d) x
+
+durationOf :: Event d p -> d
+durationOf (MkEvent x _) = x
 
 {- |
 Note or rest.
+
+[@p@] pitch class type.
+Usually 'P.Abc' or 'P.Doremi'.
 -}
-data Type p
+data Type c
     = Rest
-    | Note (P.Pitch p)
+    | Note (P.Pitch c)
     deriving (Read, Show)

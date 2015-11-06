@@ -108,3 +108,6 @@ timeSigGlyphs x
 
 bullet :: Char
 bullet = '\x2022'
+
+middleDot :: Char
+middleDot = '\xb7'

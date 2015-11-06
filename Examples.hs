@@ -106,12 +106,13 @@ exampleTable = id
     . map T.reverseRows
     $
     [
-        Nt.eventTable $ V.note (5/2) P.Do A.none 0
-        , Nt.eventTable $ V.note (5 + 3/4) P.Re A.none 0
-        , Nt.eventTable $ V.note (7 + 15/16) P.Mi A.none 0
+        Nt.eventTable $ V.expand $ V.note (5/2) P.Do A.none 2
+        , Nt.eventTable $ V.expand $ V.note (5 + 3/4) P.Re A.none 1
+        , Nt.eventTable $ V.expand $ V.note (7 + 15/16) P.Mi A.none 0
+        , Nt.eventTable $ V.expand $ V.note (2 + 63/64) P.Mi A.none (-3)
     ]
 
 -- | See 'G.threepennyExample' for the port number.
 threepenny :: IO ()
 threepenny = G.threepennyExample $ \ window -> do
-    Mo.void $ Gt.getBody window Gt.#+ [Nt.renderTable exampleTable]
+    Mo.void $ Gt.getBody window Gt.#+ [Nt.render exampleTable]

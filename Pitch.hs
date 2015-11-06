@@ -70,6 +70,9 @@ data Pitch c
 classOf :: Pitch c -> c
 classOf (MkPitch x _ _) = x
 
+octaveOf :: Pitch c -> Octave
+octaveOf (MkPitch _ _ x) = x
+
 -- * Semitone distance
 
 class SemitoneDiff a where
