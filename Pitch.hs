@@ -49,14 +49,6 @@ Zero corresponds to C0 (1 Hz in C8=256 tuning).
     semitoneNum :: a -> Int
 
 {- |
-Pitch class C octave number 0 is C0 (1 Hz in C256 tuning).
-Twelve-tone equal temperament.
-
-The octave number of middle C is 8.
--}
-type Octave = Int
-
-{- |
 [c] The pitch class type (usually 'Abc' or 'Doremi').
 
 An inhabitant of this type corresponds with a frequency in a particular tuning system.
@@ -70,8 +62,20 @@ data Pitch c
 classOf :: Pitch c -> c
 classOf (MkPitch x _ _) = x
 
-octaveOf :: Pitch c -> Octave
-octaveOf (MkPitch _ _ x) = x
+-- * Octave number
+
+class OctaveOf a where
+    octaveOf :: a -> Octave
+
+instance OctaveOf (Pitch c) where
+    octaveOf (MkPitch _ _ x) = x
+
+{- |
+In 'Abc' pitch class system,
+the pitch class C with octave number 0 is C0 (1 Hz in C256 tuning);
+thus in that system, the octave number of middle C is 8.
+-}
+type Octave = Int
 
 -- * Semitone distance
 
