@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE ExistentialQuantification #-}
 
@@ -155,6 +156,14 @@ withGtkWidget w x y = maybe x y $ asGtkWidget w
 -- | To see the example, point your browser to localhost port 10000.
 threepennyExample :: (Gt.Window -> Gt.UI ()) -> IO ()
 threepennyExample setup = do
-    t <- C.forkIO $ Gt.startGUI Gt.defaultConfig { Gt.tpPort = Just 10000 } setup
+    t <- C.forkIO $ Gt.startGUI (setPort 10000 Gt.defaultConfig) setup
     M.void getLine
     C.killThread t
+
+setPort :: Int -> Gt.Config -> Gt.Config
+setPort port conf =
+#if MIN_VERSION_threepenny_gui(0,6,0)
+    conf { Gt.jsPort = Just port }
+#else
+    conf { Gt.tpPort = Just port }
+#endif
