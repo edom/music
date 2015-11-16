@@ -20,7 +20,6 @@ library
         Accidental
         BeatExpansion
         Draw
-        DrawCairo
         GUI
         Glyph
         Lyrics
@@ -36,8 +35,20 @@ library
     build-depends:
         base >= 4
         , QuickCheck
-        , cairo
-        , gtk3
         , threepenny-gui
+    if flag(gtk)
+        exposed-modules:
+            DrawCairo
+            ExamplesGtk
+            GuiGtk
+        cpp-options:
+            -DGTK
+        build-depends:
+            cairo
+            , gtk3
     default-language:
         Haskell98
+
+flag gtk
+    description: build with GTK and Cairo
+    default: False
