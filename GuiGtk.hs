@@ -1,9 +1,14 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE ExistentialQuantification #-}
 
 module GuiGtk
 where
 
+#if MIN_VERSION_base(4,8,0)
+#else
+import Control.Applicative
+#endif
 import qualified Control.Monad as M
 
 import qualified Graphics.UI.Gtk as Gu
@@ -23,6 +28,9 @@ quit = fromIo Gu.mainQuit
 
 newtype G a = MkG { _unG :: IO a }
 instance Functor G where fmap f = MkG . fmap f . _unG
+instance Applicative G where
+    pure = MkG . pure
+    (<*>) af ax = MkG $ _unG af <*> _unG ax
 instance Monad G where
     return = MkG . return
     (>>=) m k = MkG $ _unG m >>= _unG . k

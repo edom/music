@@ -7,12 +7,13 @@ Write numbered music notation.
 Run ghci by entering this into your shell:
 
 ```
-cabal repl
+stack ghci
 ```
 
 In ghci, type:
 
 ```
+:m *Examples
 threepenny
 ```
 

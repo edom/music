@@ -1,3 +1,4 @@
 *.swp
-/dist/
+/.stack-work/
 /Session.vim
+/dist/
