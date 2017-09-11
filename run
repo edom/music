@@ -1,0 +1,78 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+is_directory ()
+{
+    [ -d "$1" ]
+}
+
+# https://stackoverflow.com/questions/1527049/join-elements-of-an-array
+join_by ()
+{
+    local IFS="$1"
+    shift
+    echo "$*"
+}
+
+main ()
+{
+    local guile_gnome_2_scheme_source_path=/usr/share/guile-gnome-2/
+    local guile_gnome_2_shared_object_path=/usr/lib/guile-gnome-2/
+    local error=false
+
+    if ! guile --version > /dev/null; then
+        echo 'It seems that Guile is not in path. Is it installed?'
+        error=true
+    fi
+
+    if ! (is_directory "$guile_gnome_2_scheme_source_path" && is_directory "$guile_gnome_2_shared_object_path"); then
+        echo '
+It seems that guile-gnome2-dev is missing.
+If you are on Ubuntu, please run:
+
+    sudo apt-get install guile-gnome2-dev guile-gnome2-gtk
+'
+        error=true
+    fi
+
+    if $error; then
+        return 1
+    fi
+
+    # Set to 0 to prevent Guile from automatically compiling source files.
+    export GUILE_AUTO_COMPILE=0
+
+    # TODO add guile_compiled_path (-C) (or guile-site-dir?)
+
+    local shared_object_dirs=(
+        "$guile_gnome_2_shared_object_path"
+        install/lib/guile/2.0/
+        dirty/
+    )
+
+    local guile_library_dirs=(
+        "$guile_gnome_2_scheme_source_path"
+        install/share/guile/site/2.0/
+        .
+    )
+
+    LD_LIBRARY_PATH="$(join_by : "${shared_object_dirs[@]}")"
+    export LD_LIBRARY_PATH
+
+    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+
+    local cmd=(guile)
+
+    local path=
+
+    for path in "${guile_library_dirs[@]}"; do
+        cmd+=(-L "$path")
+    done
+
+    "${cmd[@]}" main.scm -- "$@"
+}
+
+main "$@"

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+main ()
+{
+    local dirty=dirty/
+    mkdir -p "$dirty"
+    cc -std=c99 -g -Wall -Wextra -Wpedantic -Werror \
+        -pedantic -rdynamic -shared -fPIC -o "$dirty/libnative.so" *.c -lsndfile
+}
+
+main "$@"
