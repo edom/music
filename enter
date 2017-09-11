@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+script_dir="$(dirname "$0")"
+
+cd "$script_dir"
+
+bash --rcfile bashrc
