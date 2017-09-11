@@ -1,0 +1,17 @@
+*.dep
+*.hi
+*.o
+*.orig
+*.swp
+*.zo
+*~
+/.stack-work/
+/Session.vim
+/dist/
+/drum-samples/
+/gettext-0.19.8/
+/guile-ncurses-2.2/
+/install/
+/jack-keyboard-2.7.1/
+/jack2/
+node_modules/
